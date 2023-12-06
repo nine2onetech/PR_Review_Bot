@@ -96,7 +96,11 @@ def app():
     send_slack(pr_message_to_slack)
 
 if __name__ == "__main__":
-    print(G_ACCESS_TOKEN)
+    print(":warning:", G_ACCESS_TOKEN)
+    print(":warning:", SLACK_INCOMING_WEBHOOK)
+    print(":warning:", TARGET_GITHUB_REPO)
+    print(":warning:", IS_DDAY_AUTO_DECREASE)
+    print(":warning:", ORGANIZATION)
 
     auth = Auth.Token(G_ACCESS_TOKEN)
     g = Github(auth=auth)
