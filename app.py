@@ -96,6 +96,8 @@ def app():
     send_slack(pr_message_to_slack)
 
 if __name__ == "__main__":
+    print(G_ACCESS_TOKEN)
+
     auth = Auth.Token(G_ACCESS_TOKEN)
     g = Github(auth=auth)
     repo = g.get_repo(ORGANIZATION + "/" + TARGET_GITHUB_REPO)
