@@ -1,5 +1,6 @@
 import json
 from github import Github
+from github import Auth
 import os
 import requests
 
