@@ -44,7 +44,7 @@ def set_changed_label(pull, before_label, after_label):
     pull.remove_from_labels(before_label)
     pull.set_labels(after_label)
 
-def pr_message_to_slack(pr_link, label, title):
+def _pr_message_to_slack(pr_link, label, title):
     if not label or label == '':  # 변경점 없음
         return ''
     return f'[`{label}`] <{pr_link}|{title}>\n'
@@ -89,10 +89,10 @@ def app():
 
             if IS_DDAY_AUTO_DECREASE == 'true':
                 set_changed_label(pull, before_label, after_label)
-                pr_message_to_slack += pr_message_to_slack(pr_link, after_label, pull.title)
+                pr_message_to_slack += _pr_message_to_slack(pr_link, after_label, pull.title)
             else:
                 print("🥳", IS_DDAY_AUTO_DECREASE)
-                pr_message_to_slack += pr_message_to_slack(pr_link, before_label, pull.title)
+                pr_message_to_slack += _pr_message_to_slack(pr_link, before_label, pull.title)
 
     send_slack(pr_message_to_slack)
 
