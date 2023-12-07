@@ -91,14 +91,11 @@ def app():
                 set_changed_label(pull, before_label, after_label)
                 pr_message_to_slack += _pr_message_to_slack(pr_link, after_label, pull.title)
             else:
-                print("🥳", IS_DDAY_AUTO_DECREASE)
                 pr_message_to_slack += _pr_message_to_slack(pr_link, before_label, pull.title)
 
     send_slack(pr_message_to_slack)
 
 if __name__ == "__main__":
-    print("❌", G_ACCESS_TOKEN, SLACK_INCOMING_WEBHOOK, TARGET_GITHUB_REPO, IS_DDAY_AUTO_DECREASE, ORGANIZATION)
-
     auth = Auth.Token(G_ACCESS_TOKEN)
     g = Github(auth=auth)
     repo = g.get_repo(ORGANIZATION + "/" + TARGET_GITHUB_REPO)
@@ -106,5 +103,4 @@ if __name__ == "__main__":
 
     app()
 
-    # To close connections after use
     g.close()
