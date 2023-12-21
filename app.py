@@ -75,7 +75,7 @@ def app():
     pr_message_to_slack = (
         f"🥶 [<https://github.com/{ORGANIZATION}/{TARGET_GITHUB_REPO}|{TARGET_GITHUB_REPO}>] 에 총 {count}개의 Pull Request가 리뷰를 기다리고 있어요!\n"
     ) if count > 0 else (
-        f":sparkles: [<https://github.com/{ORGANIZATION}/{TARGET_GITHUB_REPO}|{TARGET_GITHUB_REPO}>] 에 남아 있는 PR이 없어요! :robots:\n"
+        f":sparkles: [<https://github.com/{ORGANIZATION}/{TARGET_GITHUB_REPO}|{TARGET_GITHUB_REPO}>] 에 남아 있는 PR이 없어요! :robot_face:\n"
     )
 
     if count > 0:
