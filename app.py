@@ -18,8 +18,9 @@ def total_pull_requests():
         state="open",
         sort="updated"
     ):
-        pull_requests_list.append(pull)
-        count += 1
+        if not pull.draft:
+            pull_requests_list.append(pull)
+            count += 1
     return count, pull_requests_list
 
 def make_pr_link(no):
