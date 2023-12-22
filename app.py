@@ -10,7 +10,7 @@ TARGET_GITHUB_REPO = os.getenv("TARGET_GITHUB_REPO")
 IS_DDAY_AUTO_DECREASE = os.getenv("IS_DDAY_AUTO_DECREASE")
 ORGANIZATION = os.getenv("ORGANIZATION")
 
-def total_pull_requests():
+def need_review_pr_count():
     count = 0
     pull_requests_list = []
 
@@ -18,7 +18,8 @@ def total_pull_requests():
         state="open",
         sort="updated"
     ):
-        if not pull.draft:
+        dday_label = list(filter(lambda x: x.name.startswith("D-") or x.name == "OverDue", pull.labels))
+        if not pull.draft and any(label in dday_label for label in [label.name for label in pull.labels]):
             pull_requests_list.append(pull)
             count += 1
     return count, pull_requests_list
@@ -78,8 +79,39 @@ def switch_is_d_day_auto_decrease():
     else:
         repo.create_variable(variable_name="IS_DDAY_AUTO_DECREASE", value="true")
 
+def get_reviewed(pull):
+    # Pull Request 작성자 가져오기
+    pr_author = pull.user.login
+
+    # 리뷰를 한 사람 리스트 가져오기
+    reviews = pull.get_reviews()
+    reviewed = [review.user.login for review in reviews if review.user.login != pr_author]
+
+    # 리스트를 set으로 변환하여 중복 제거
+    reviewed = list(set(reviewed))
+
+    return reviewed
+
+def get_not_reviewed(pull):
+    # Pull Request 작성자 가져오기
+    pr_author = pull.user.login
+
+    # 개인 리뷰어와 팀 리뷰어 리스트 가져오기
+    requested_reviewers, requested_teams = pull.get_review_requests()
+    not_reviewed = [reviewer.login for reviewer in requested_reviewers]
+
+    # 팀 리뷰어의 멤버 추가
+    for team in requested_teams:
+        team_members = [member.login for member in team.get_members()]
+        not_reviewed.extend(team_members)
+
+    # 리스트를 set으로 변환하여 중복 제거
+    not_reviewed = list(set(not_reviewed))
+
+    return [reviewer for reviewer in not_reviewed if reviewer != pr_author]
+
 def app():
-    count, pulls = total_pull_requests()
+    count, pulls = need_review_pr_count()
     pr_message_to_slack = (
         f"🥶 [<https://github.com/{ORGANIZATION}/{TARGET_GITHUB_REPO}|{TARGET_GITHUB_REPO}>] 에 총 {count}개의 Pull Request가 리뷰를 기다리고 있어요!\n"
     ) if count > 0 else (
@@ -92,6 +124,11 @@ def app():
 
             dday_label = list(filter(lambda x: x.name.startswith("D-") or x.name == "OverDue", pull.labels))
 
+            if any(label in dday_label for label in [label.name for label in pull.labels]):
+                message_reviewers = f"  리뷰 해주세요! {get_not_reviewed(pull)}"
+            else:
+                message_reviewers = f"  리뷰가 완료되었어요. 확인해주세요! {pull.user.login}"
+
             before_label = dday_label[0].name if len(dday_label) > 0 else ''
             after_label = decreased_label(before_label)
 
@@ -100,6 +137,7 @@ def app():
                 pr_message_to_slack += _pr_message_to_slack(pr_link, after_label, pull.title)
             else:
                 pr_message_to_slack += _pr_message_to_slack(pr_link, before_label, pull.title)
+            pr_message_to_slack += message_reviewers + "\n"
 
     send_slack(pr_message_to_slack)
     switch_is_d_day_auto_decrease()
