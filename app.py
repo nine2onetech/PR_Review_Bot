@@ -71,6 +71,13 @@ def send_slack(message):
         headers=header
     )
 
+def switch_is_d_day_auto_decrease():
+    repo.delete_variable(variable_name="IS_DDAY_AUTO_DECREASE")
+    if IS_DDAY_AUTO_DECREASE == "true":
+        repo.create_variable(variable_name="IS_DDAY_AUTO_DECREASE", value="false")
+    else:
+        repo.create_variable(variable_name="IS_DDAY_AUTO_DECREASE", value="true")
+
 def app():
     count, pulls = total_pull_requests()
     pr_message_to_slack = (
@@ -95,6 +102,7 @@ def app():
                 pr_message_to_slack += _pr_message_to_slack(pr_link, before_label, pull.title)
 
     send_slack(pr_message_to_slack)
+    switch_is_d_day_auto_decrease()
 
 if __name__ == "__main__":
     auth = Auth.Token(G_ACCESS_TOKEN)
