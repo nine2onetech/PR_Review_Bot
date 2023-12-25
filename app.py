@@ -18,7 +18,7 @@ def need_review_pr_count():
         state="open",
         sort="updated"
     ):
-        dday_label = list(filter(lambda x: x.name.startswith("D-") or x.name == "OverDue", pull.labels))
+        dday_label = [label.name for label in pull.labels if label.name.startswith("D-") or label.name == "OverDue"]
         if not pull.draft and any(label in dday_label for label in [label.name for label in pull.labels]):
             pull_requests_list.append(pull)
             count += 1
@@ -122,14 +122,15 @@ def app():
         for pull in pulls:
             pr_link = make_pr_link(pull.number)
 
-            dday_label = list(filter(lambda x: x.name.startswith("D-") or x.name == "OverDue", pull.labels))
+            dday_label = [label.name for label in pull.labels if label.name.startswith("D-") or label.name == "OverDue"]
 
             if any(label in dday_label for label in [label.name for label in pull.labels]):
-                message_reviewers = f"  리뷰 해주세요! {get_not_reviewed(pull)}"
-            else:
-                message_reviewers = f"  리뷰가 완료되었어요. 확인해주세요! {pull.user.login}"
+                if get_not_reviewed(pull):
+                    message_reviewers = f"  리뷰 해주세요! {get_not_reviewed(pull)}"
+                else:
+                    message_reviewers = f"  리뷰가 완료되었어요. 확인해주세요! {pull.user.login}"    
 
-            before_label = dday_label[0].name if len(dday_label) > 0 else ''
+            before_label = dday_label[0] if len(dday_label) > 0 else ''
             after_label = decreased_label(before_label)
 
             if IS_DDAY_AUTO_DECREASE == 'true':
