@@ -47,8 +47,6 @@ def set_changed_label(pull, before_label, after_label):
     pull.set_labels(after_label)
 
 def _pr_message_to_slack(pr_link, label, title):
-    if not label or label == '':  # 변경점 없음
-        return ''
     return f'[`{label}`] <{pr_link}|{title}>\n'
 
 def send_slack(message):
