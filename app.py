@@ -38,16 +38,29 @@ def decreased_label(label):
         return 'D-0'
     elif label == 'D-0':
         return 'OverDue'
+    elif label == 'OverDue':
+        return 'OverDue'
+    return label
 
 def set_changed_label(pull, before_label, after_label):
-    if not after_label or after_label == '': # 변경점 없음
+    if not after_label or after_label == '':  # 변경점 없음
         return
 
-    pull.remove_from_labels(before_label)
-    pull.set_labels(after_label)
+    # 현재 라벨들을 가져와서 디데이 라벨만 제거
+    current_labels = [label.name for label in pull.labels if not label.name.startswith("D-") and label.name != "OverDue"]
+    
+    if before_label in current_labels:
+        current_labels.remove(before_label)
+    
+    # 새로운 디데이 라벨 추가
+    if after_label:
+        current_labels.append(after_label)
+    
+    # 라벨 업데이트
+    pull.set_labels(*current_labels)
 
 def _pr_message_to_slack(pr_link, label, title):
-    return f'[`{label}`] <{pr_link}|{title}>\n'
+    return f'`{label}` <{pr_link}|{title}>\n'
 
 def send_slack(message):
     header = {'Content-type': 'application/json'}
@@ -111,7 +124,7 @@ def get_not_reviewed(pull):
 def app():
     count, pulls = need_review_pr_count()
     pr_message_to_slack = (
-        f"🥶 [<https://github.com/{ORGANIZATION}/{TARGET_GITHUB_REPO}|{TARGET_GITHUB_REPO}>] 에 총 {count}개의 Pull Request가 리뷰를 기다리고 있어요!\n"
+        f"🥶 <https://github.com/{ORGANIZATION}/{TARGET_GITHUB_REPO}|{TARGET_GITHUB_REPO}> 에 총 {count}개의 Pull Request가 리뷰를 기다리고 있어요!\n"
     ) if count > 0 else (
         f":sparkles: [<https://github.com/{ORGANIZATION}/{TARGET_GITHUB_REPO}|{TARGET_GITHUB_REPO}>] 에 남아 있는 PR이 없어요! :robot_face:\n"
     )
@@ -126,7 +139,7 @@ def app():
                 if get_not_reviewed(pull):
                     message_reviewers = f"  리뷰 해주세요! {get_not_reviewed(pull)}"
                 else:
-                    message_reviewers = f"  리뷰가 완료되었어요. 확인해주세요! {pull.user.login}"    
+                    message_reviewers = f"  리뷰가 완료되었어요. 확인해주세요! {pull.user.login}"
 
             before_label = dday_label[0] if len(dday_label) > 0 else ''
             after_label = decreased_label(before_label)
